@@ -5,7 +5,7 @@ connection = sqlite3.connect('VkUserAnalyse.sqlite')
 #открываем соединение
 cursor = connection.cursor()
 
-#cоздание таблицы группы
+#cоздание таблицы группы вятгу
 cursor.execute(""""Create table Group
                     """)
 
