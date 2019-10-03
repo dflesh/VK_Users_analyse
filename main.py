@@ -12,15 +12,15 @@ def get_users():
     # print(resp['items'])
     offset = 0
     count = 1
-    while offset < 1001:
+    while offset < 4999:
         resp = api.groups.getMembers(group_id='prcom_vyatsu', v=v, offset=offset)
         offset += 1000
         for i in resp['items']:
             # print(count)
             count += 1
             members.append(api.users.get(user_ids=i, v=v, fields='bdate, sex'))
-
-            if count > 5:
+            print(count)
+            if count > 2000:
                 break
 
     db.create_tables()

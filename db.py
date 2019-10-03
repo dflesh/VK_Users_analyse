@@ -6,7 +6,11 @@ def create_db():
     year_now = str(datetime.now().year)
     month_now = str(datetime.now().month)
     day_now = str(datetime.now().day)
-    date_now = year_now + '_' + month_now + '_' + day_now
+    hour_now = str(datetime.now().hour)
+    minute_now = str(datetime.now().minute)
+    second_now = str(datetime.now().second)
+    date_now = year_now + '-' + month_now + '-' + day_now + '_' + '[' + \
+               hour_now + '-' + minute_now + '-' + second_now + ']'
 
     db_name = str(date_now) + '.db'
 
@@ -53,7 +57,7 @@ def create_tables():
     # cursor.execute('INSERT INTO vyatsu_group VALUES("yellow", "black")')
     # cursor.execute('SELECT * FROM VSU_Group')
 
-    #print(cursor.fetchall())
+    # print(cursor.fetchall())
 
 
 def members_insert(members):
@@ -81,4 +85,3 @@ def members_insert(members):
 
 def select_data():
     print('to do select data here')
-
