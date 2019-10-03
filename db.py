@@ -9,8 +9,13 @@ def create_db():
     date_now = year_now + '_' + month_now + '_' + day_now
 
     db_name = str(date_now) + '.db'
-    print(db_name)
+
     connection = sqlite3.connect(db_name)
+    return connection
+
+
+def create_tables():
+    connection = create_db()
     cursor = connection.cursor()
 
     cursor.execute('CREATE TABLE VSU_Community'
@@ -23,8 +28,7 @@ def create_db():
                    '(id integer primary key, '
                    'name varchar(100), '
                    'gender varchar(10), '
-                   'age integer, '
-                   'href text)')
+                   'age integer)')
 
     cursor.execute('CREATE TABLE VSU_Member_Activity'
                    '(like integer,'
@@ -43,16 +47,38 @@ def create_db():
                    'name text,'
                    'foreign key(memberID) references VSU_Member(id))')
 
+    connection.commit()
+    connection.close()
 
     # cursor.execute('INSERT INTO vyatsu_group VALUES("yellow", "black")')
     # cursor.execute('SELECT * FROM VSU_Group')
 
     #print(cursor.fetchall())
 
+
+def members_insert(members):
+    connection = create_db()
+    cursor = connection.cursor()
+    print(*members, sep="\n")
+    for i in members:
+        for j in i:
+            id = j['id']
+            name = j['first_name'] + j['last_name']
+            gender = ''
+            if j['sex'] == 1:
+                gender = 'Жен.'
+            else:
+                gender = 'Муж.'
+
+            # TODO age calculating. Exception if birth date in member is not full {year-month-day}
+            age = 0
+
+            cursor.execute('INSERT INTO VSU_Member(id, name, gender, age) VALUES(?, ?, ?, ?)', [id, name, gender, age])
+
     connection.commit()
     connection.close()
 
 
-def main():
-    create_db()
+def select_data():
+    print('to do select data here')
 

@@ -9,21 +9,27 @@ v = 5.101
 def get_users():
     resp = api.groups.getMembers(group_id='prcom_vyatsu', v=v, offset='0')
     members = []
-    print(resp['items'])
+    # print(resp['items'])
     offset = 0
     count = 1
     while offset < 1001:
         resp = api.groups.getMembers(group_id='prcom_vyatsu', v=v, offset=offset)
         offset += 1000
         for i in resp['items']:
-            print(count)
+            # print(count)
             count += 1
-            members.append(api.users.get(user_ids=i, v=v, fields='bdate'))
-            #print(api.getProfile.get(user_ids=i, v=v, profile_fields='all'))
+            members.append(api.users.get(user_ids=i, v=v, fields='bdate, sex'))
+
             if count > 5:
                 break
 
-    print(*members, sep="\n")
+    db.create_tables()
+    db.members_insert(members)
+    # print(*members, sep="\n")
 
-get_users()
-db.main()
+
+def main():
+    get_users()
+
+
+main()
