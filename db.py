@@ -1,18 +1,16 @@
 import sqlite3
-from datetime import datetime, date, time
+from datetime import datetime
+import re
 
 
 def create_db():
     year_now = str(datetime.now().year)
     month_now = str(datetime.now().month)
     day_now = str(datetime.now().day)
-    hour_now = str(datetime.now().hour)
-    minute_now = str(datetime.now().minute)
-    second_now = str(datetime.now().second)
-    date_now = year_now + '-' + month_now + '-' + day_now + '_' + '[' + \
-               hour_now + '-' + minute_now + '-' + second_now + ']'
 
-    db_name = str(date_now) + '.db'
+    date_now = year_now + '_' + month_now + '_' + day_now
+
+    db_name = 'vk_members_' + str(date_now) + '.db'
 
     connection = sqlite3.connect(db_name)
     return connection
@@ -54,28 +52,43 @@ def create_tables():
     connection.commit()
     connection.close()
 
-    # cursor.execute('INSERT INTO vyatsu_group VALUES("yellow", "black")')
-    # cursor.execute('SELECT * FROM VSU_Group')
-
-    # print(cursor.fetchall())
-
 
 def members_insert(members):
     connection = create_db()
     cursor = connection.cursor()
-    print(*members, sep="\n")
+    # print(*members, sep="\n")
     for i in members:
         for j in i:
             id = j['id']
-            name = j['first_name'] + j['last_name']
+            name = j['first_name'] + ' ' + j['last_name']
             gender = ''
             if j['sex'] == 1:
                 gender = 'Жен.'
             else:
                 gender = 'Муж.'
 
-            # TODO age calculating. Exception if birth date in member is not full {year-month-day}
-            age = 0
+            # Do Age calculating
+            bdate = ''
+            # Check bdate for exist in dictionary
+            if 'bdate' in j:
+                # Check bdate for completeness ( dd-mm-yy )
+                bdate = re.match('([0-9]+?.[0-9]+?.[0-9]+)', j['bdate'])
+            age = None
+            if bdate:
+                birth_date = bdate.group(0).split('.')
+                day_bdate = int(birth_date[0])
+                month_bdate = int(birth_date[1])
+                year_bdate = int(birth_date[2])
+                year_now = int(datetime.now().year)
+                month_now = int(datetime.now().month)
+                day_now = int(datetime.now().day)
+                # Age calculating
+                if day_now < day_bdate and month_now < month_bdate:
+                    age = str(year_now - year_bdate)
+                else:
+                    age = str(year_now - year_bdate - 1)
+            elif bdate is None:
+                age = None
 
             cursor.execute('INSERT INTO VSU_Member(id, name, gender, age) VALUES(?, ?, ?, ?)', [id, name, gender, age])
 
@@ -83,5 +96,3 @@ def members_insert(members):
     connection.close()
 
 
-def select_data():
-    print('to do select data here')
