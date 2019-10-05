@@ -1,9 +1,10 @@
 import sqlite3
 from datetime import datetime
 import re
+import os
 
 
-def create_db():
+def create_db(remove):
     year_now = str(datetime.now().year)
     month_now = str(datetime.now().month)
     day_now = str(datetime.now().day)
@@ -12,12 +13,15 @@ def create_db():
 
     db_name = 'vk_members_' + str(date_now) + '.db'
 
+    if os.path.isfile(db_name) and remove:
+        os.remove(db_name)
+
     connection = sqlite3.connect(db_name)
     return connection
 
 
 def create_tables():
-    connection = create_db()
+    connection = create_db(True)
     cursor = connection.cursor()
 
     cursor.execute('CREATE TABLE VSU_Community'
@@ -54,9 +58,9 @@ def create_tables():
 
 
 def members_insert(members):
-    connection = create_db()
+    connection = create_db(False)
     cursor = connection.cursor()
-    # print(*members, sep="\n")
+
     for i in members:
         for j in i:
             id = j['id']
@@ -94,5 +98,3 @@ def members_insert(members):
 
     connection.commit()
     connection.close()
-
-

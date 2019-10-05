@@ -11,17 +11,15 @@ def get_users():
     members = []
     offset = 0
     count = 1
-    # print(resp['count'])
     while offset < resp['count']:
         resp = api.groups.getMembers(group_id='prcom_vyatsu', v=v, offset=offset)
         offset += 1000
         for i in resp['items']:
-            # print(count)
+            print(count)
             count += 1
             members.append(api.users.get(user_ids=i, v=v, fields='bdate, sex'))
-            if count > resp['count']:
+            if count > 10:
                 break
-    # print('members: ', *members, sep="\n")
     return members
 
 
@@ -34,8 +32,6 @@ def get_communities(members):
                 response = api.users.getSubscriptions(user_id=id, v=v, extended=1)
                 print(response)
                 subscriptions = response['items']
-                # print(subscriptions)
-                count = response['count']
                 all_groups = []
                 for group in subscriptions:
                     print(group)
@@ -44,7 +40,6 @@ def get_communities(members):
                     groupID = group['id']
 
                     all_groups.append({'id': groupID, 'name': name})
-            # print(id)
                 member_communities.append({'id': id, 'subscriptions': all_groups})
             except:
                 print('profile is private')
@@ -56,7 +51,7 @@ def get_communities(members):
 def main():
     db.create_tables()
     members = get_users()
-    member_communities = get_communities(members) 
+    member_communities = get_communities(members)
     db.members_insert(members)
 
 
