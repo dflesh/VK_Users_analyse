@@ -1,5 +1,6 @@
 import vk
 import db
+import time
 
 session = vk.Session(access_token='d5b441ccd5b441ccd5b441cc0bd5d94752dd5b4d5b441cc883ce57ed215c145977b71cd')
 api = vk.API(session)
@@ -15,10 +16,9 @@ def get_users():
         resp = api.groups.getMembers(group_id='prcom_vyatsu', v=v, offset=offset)
         offset += 1000
         for i in resp['items']:
-            print(count)
             count += 1
             members.append(api.users.get(user_ids=i, v=v, fields='bdate, sex'))
-            if count > 10:
+            if count > resp['count']:
                 break
     return members
 
@@ -30,29 +30,91 @@ def get_communities(members):
             id = j['id']
             try:
                 response = api.users.getSubscriptions(user_id=id, v=v, extended=1)
-                print(response)
                 subscriptions = response['items']
                 all_groups = []
                 for group in subscriptions:
-                    print(group)
                     name = group['name']
-                    print(name)
                     groupID = group['id']
 
                     all_groups.append({'id': groupID, 'name': name})
                 member_communities.append({'id': id, 'subscriptions': all_groups})
             except:
                 print('profile is private')
-    print(*member_communities, sep='\n')
-
     return member_communities
+
+
+def get_vsu_group():
+    vsu_group = api.groups.getById(group_id='prcom_vyatsu', v=v, fields='description')
+    return vsu_group
+
+
+def get_vsu_posts():
+    counter = 0
+    offset = 0
+    response = api.wall.get(owner_id='-108366262', v=v, offset=offset, filter='owner')
+    count = response['count']
+    # print(count)
+    posts = {}
+    while offset < count:
+        response = api.wall.get(owner_id='-108366262', v=v, count=count, offset=offset, filter='owner')
+        offset += 100
+        for i in response['items']:
+            posts[counter] = i['id']
+            counter += 1
+            if counter > count:
+                break
+    return posts
+
+
+def get_activity(posts, users):
+    activity = []
+    for i in posts:
+        post_id = posts[i]
+        # print(post_id)
+        likes_list = api.likes.getList(type='post', item_id=post_id, v=v, filter='likes', owner_id='-108366262')
+        comments_list = api.wall.getComments(owner_id='-108366262', post_id=post_id, v=v)
+        # print(comments_list)
+        # print(likes_list)
+        if likes_list['count'] != 0:
+            for like in likes_list['items']:
+                for comment in comments_list['items']:
+                    # print(comment)
+                    for user in users:
+                        if user == like:
+                            like_flag = 1
+                        else:
+                            like_flag = 0
+                        if user == comment['from_id']:
+                            comment_flag = 1
+                        else:
+                            comment_flag = 0
+                        if like_flag == 1 or comment_flag == 1:
+                            activity.append({'userID': user, 'postID': post_id,
+                                             'like': like_flag, 'comment': comment_flag})
+    # print(*activity, sep='\n')
+    return activity
 
 
 def main():
     db.create_tables()
+
     members = get_users()
-    member_communities = get_communities(members)
     db.members_insert(members)
 
+    member_communities = get_communities(members)
+    db.member_community_insert(member_communities)
 
+    vsu_group = get_vsu_group()
+    db.vsu_community_insert(vsu_group)
+
+    users = db.select_users_ids()
+
+    posts = get_vsu_posts()
+    activities = get_activity(posts, users)
+    db.insert_activities(activities)
+
+
+start_time = time.time()
+print(start_time)
 main()
+print(time.time() - start_time)
