@@ -8,36 +8,37 @@ v = 5.101
 
 
 def get_users():
-    resp = api.groups.getMembers(group_id='prcom_vyatsu', v=v, offset='0')
+    response = api.groups.getMembers(group_id='prcom_vyatsu', v=v, offset='0')
     members = []
     offset = 0
     count = 1
-    while offset < resp['count']:
-        resp = api.groups.getMembers(group_id='prcom_vyatsu', v=v, offset=offset)
+    while offset < response['count']:
+        response = api.groups.getMembers(group_id='prcom_vyatsu', v=v, offset=offset)
         offset += 1000
-        for i in resp['items']:
+        for member_id in response['items']:
             count += 1
-            members.append(api.users.get(user_ids=i, v=v, fields='bdate, sex'))
-            if count > resp['count']:
+            members.append(api.users.get(user_ids=member_id, v=v, fields='bdate, sex'))
+            if count > 10:
                 break
     return members
 
 
 def get_communities(members):
     member_communities = []
-    for i in members:
-        for j in i:
-            id = j['id']
+    for member in members:
+        # print(member)
+        for info in member:
+            member_id = info['id']
             try:
-                response = api.users.getSubscriptions(user_id=id, v=v, extended=1)
+                response = api.users.getSubscriptions(user_id=member_id, v=v, extended=1)
                 subscriptions = response['items']
-                all_groups = []
-                for group in subscriptions:
-                    name = group['name']
-                    groupID = group['id']
+                all_communities = []
+                for community in subscriptions:
+                    community_name = community['name']
+                    community_id = community['id']
 
-                    all_groups.append({'id': groupID, 'name': name})
-                member_communities.append({'id': id, 'subscriptions': all_groups})
+                    all_communities.append({'id': community_id, 'name': community_name})
+                member_communities.append({'id': member_id, 'subscriptions': all_communities})
             except:
                 print('profile is private')
     return member_communities
@@ -58,15 +59,16 @@ def get_vsu_posts():
     while offset < count:
         response = api.wall.get(owner_id='-108366262', v=v, count=count, offset=offset, filter='owner')
         offset += 100
-        for i in response['items']:
-            posts[counter] = i['id']
+        for post in response['items']:
+            # print(post)
+            posts[counter] = post['id']
             counter += 1
             if counter > count:
                 break
     return posts
 
 
-def get_activity(posts, users):
+def get_activity(posts, users_ids):
     activity = []
     for i in posts:
         post_id = posts[i]
@@ -79,17 +81,17 @@ def get_activity(posts, users):
             for like in likes_list['items']:
                 for comment in comments_list['items']:
                     # print(comment)
-                    for user in users:
-                        if user == like:
+                    for user_id in users_ids:
+                        if user_id == like:
                             like_flag = 1
                         else:
                             like_flag = 0
-                        if user == comment['from_id']:
+                        if user_id == comment['from_id']:
                             comment_flag = 1
                         else:
                             comment_flag = 0
                         if like_flag == 1 or comment_flag == 1:
-                            activity.append({'userID': user, 'postID': post_id,
+                            activity.append({'userID': user_id, 'postID': post_id,
                                              'like': like_flag, 'comment': comment_flag})
     # print(*activity, sep='\n')
     return activity
