@@ -61,12 +61,14 @@ def members_insert(members):
     connection = create_db(False)
     cursor = connection.cursor()
 
-    for i in members:
-        for j in i:
-            id = j['id']
-            name = j['first_name'] + ' ' + j['last_name']
+    for member in members:
+        # print(member)
+        for info in member:
+            # print(info)
+            member_id = info['id']
+            member_name = info['first_name'] + ' ' + info['last_name']
             gender = ''
-            if j['sex'] == 1:
+            if info['sex'] == 1:
                 gender = 'Жен.'
             else:
                 gender = 'Муж.'
@@ -74,10 +76,10 @@ def members_insert(members):
             # Do Age calculating
             bdate = ''
             # Check bdate for exist in dictionary
-            if 'bdate' in j:
+            if 'bdate' in info:
                 # Check bdate for completeness ( dd-mm-yy )
-                bdate = re.match('([0-9]+?.[0-9]+?.[0-9]+)', j['bdate'])
-            age = None
+                bdate = re.match('([0-9]+?.[0-9]+?.[0-9]+)', info['bdate'])
+            age = ''
             if bdate:
                 birth_date = bdate.group(0).split('.')
                 day_bdate = int(birth_date[0])
@@ -86,32 +88,35 @@ def members_insert(members):
                 year_now = int(datetime.now().year)
                 month_now = int(datetime.now().month)
                 day_now = int(datetime.now().day)
-                # Age calculating
+
                 if day_now > day_bdate and month_now > month_bdate:
                     age = str(year_now - year_bdate)
                 else:
                     age = str(year_now - year_bdate - 1)
+                if int(age) > 50:
+                    age = None
             elif bdate is None:
                 age = None
 
-            cursor.execute('INSERT INTO VSU_Member(id, name, gender, age) VALUES(?, ?, ?, ?)', [id, name, gender, age])
+            cursor.execute('INSERT INTO VSU_Member(id, name, gender, age) '
+                           'VALUES(?, ?, ?, ?)', [member_id, member_name, gender, age])
 
     connection.commit()
     connection.close()
 
 
-def member_community_insert(communities):
+def member_community_insert(members_communities):
     connection = create_db(False)
     cursor = connection.cursor()
-
-    for i in communities:
-        id = i['id']
-        for j in i['subscriptions']:
-            communityID = j['id']
-            communityName = j['name']
+    # print(*members_communities, sep='\n')
+    for member_communities in members_communities:
+        member_id = member_communities['id']
+        for subscription in member_communities['subscriptions']:
+            community_id = subscription['id']
+            community_name = subscription['name']
 
             cursor.execute('INSERT INTO VSU_Member_Community(memberID, communityID, href, name)'
-                           ' VALUES(?, ?, ?, ?)', [id, communityID, '', communityName])
+                           ' VALUES(?, ?, ?, ?)', [member_id, community_id, '', community_name])
 
     connection.commit()
     connection.close()
@@ -120,14 +125,15 @@ def member_community_insert(communities):
 def vsu_community_insert(vsu_group):
     connection = create_db(False)
     cursor = connection.cursor()
-    for i in vsu_group:
-        id = i['id']
-        name = i['name']
-        description = i['description']
+    for item in vsu_group:
+        # print(item)
+        group_id = item['id']
+        group_name = item['name']
+        description = item['description']
         href = ''
 
         cursor.execute('INSERT INTO VSU_Community(id, name, info, href)'
-                       'VALUES(?, ?, ?, ?)', [id, name, description, href])
+                       'VALUES(?, ?, ?, ?)', [group_id, group_name, description, href])
 
     connection.commit()
     connection.close()
@@ -151,13 +157,13 @@ def insert_activities(activities):
     cursor = connection.cursor()
     # print(activities)
     for activity in activities:
-        userID = activity['userID']
-        postID = activity['postID']
+        user_id = activity['userID']
+        post_id = activity['postID']
         like = activity['like']
         comment = activity['comment']
         # print(userID, postID, like, comment)
         cursor.execute('INSERT INTO VSU_Member_Activity(like, repost, comment, postID, memberID, communityID )'
-                       'VALUES(?, ?, ?, ?, ?, ?)', [like, 0, comment, postID, userID, 108366262])
+                       'VALUES(?, ?, ?, ?, ?, ?)', [like, 0, comment, post_id, user_id, 108366262])
 
     connection.commit()
     connection.close()
